@@ -10,7 +10,11 @@
     tools:context="com.example.maciek.myapplication.MainActivity">
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!" />
+        android:id="@+id/textViewConsole"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:text="APPLICATION\n\n"
+        android:scrollbars="vertical"
+        android:maxLines="10000"
+        android:singleLine="false"/>
 </RelativeLayout>

@@ -17,9 +17,9 @@ import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.provider.Settings;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -28,13 +28,23 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
     BluetoothManager bluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
+    TextView textViewConsole;
+    private TextViewLogger tvLogger;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        
+
         setContentView(R.layout.activity_main);
+        textViewConsole = (TextView) findViewById(R.id.textViewConsole);
+        this.tvLogger = new TextViewLogger(textViewConsole);
+        tvLogger.info("Starting application...");
+
         bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
+
 
 //        checkIfBLE();
 
@@ -56,8 +66,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void checkIfBLE() {
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            Toast.makeText(this, "NO BLE", Toast.LENGTH_SHORT).show();
-//            finish();
+            tvLogger.error("NO BLE!!");
         }
     }
 
@@ -65,16 +74,21 @@ public class MainActivity extends AppCompatActivity {
         final BluetoothLeScanner bleScanner = mBluetoothAdapter.getBluetoothLeScanner();
         ScanSettings scanSettings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build();
         if (bleScanner == null) {
+            tvLogger.error("NO BLE SCANNER");
             return;
         }
+
+        tvLogger.info("Starting scanning for BLE Devices");
+
         bleScanner.startScan(new ArrayList<ScanFilter>(), scanSettings, new ScanCallback() {
             @Override
             public void onScanResult(int callbackType, ScanResult result) {
-                Toast.makeText(getApplicationContext(), "FOUND", Toast.LENGTH_SHORT).show();
+                String resultString = "unknown";
+
 
                 switch (callbackType) {
                     case ScanSettings.CALLBACK_TYPE_ALL_MATCHES:
-                        Toast.makeText(getApplicationContext(), "All matches ", Toast.LENGTH_SHORT).show();
+                        resultString = "All matches";
                         connectGatt(result.getDevice());
                         break;
                     case ScanSettings.CALLBACK_TYPE_FIRST_MATCH:
@@ -87,24 +101,28 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(), "??", Toast.LENGTH_SHORT).show();
                 }
 
+                tvLogger.important("Scan result '%s', DEVICE: '%s'", resultString, result.getDevice().getName());
+
                 bleScanner.stopScan(this);
+                tvLogger.important("stoppedScan");
             }
 
             @Override
             public void onBatchScanResults(List<ScanResult> results) {
-                Toast.makeText(getApplicationContext(), "BATCH", Toast.LENGTH_LONG).show();
+                tvLogger.warn("Batch");
                 super.onBatchScanResults(results);
             }
 
             @Override
             public void onScanFailed(int errorCode) {
-                Toast.makeText(getApplicationContext(), "FAILED", Toast.LENGTH_LONG).show();
+                tvLogger.warn("Failed");
                 super.onScanFailed(errorCode);
             }
         });
     }
 
     public void connectGatt(BluetoothDevice device) {
+        tvLogger.important("Connecting to gatt device '%s'", device.getName());
         device.connectGatt(getApplicationContext(), false, gattCallback);
     }
 
@@ -120,52 +138,61 @@ public class MainActivity extends AppCompatActivity {
                     state = "disconnected";
                     break;
             }
-//            Toast.makeText(this, status == BluetoothGatt.GATT_SUCCESS ? "SUCCESS" : "DUPA" + " ConnectionStateChanged to: " + state , Toast.LENGTH_SHORT).show();
+            tvLogger.important("Gatt conn state changed to '%s' with '%s'", state, status == BluetoothGatt.GATT_SUCCESS ? "SUCCESS" : "FAIL");
             super.onConnectionStateChange(gatt, status, newState);
         }
 
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            tvLogger.warn("1");
             super.onServicesDiscovered(gatt, status);
         }
 
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            tvLogger.warn("2");
             super.onCharacteristicRead(gatt, characteristic, status);
         }
 
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            tvLogger.warn("3");
             super.onCharacteristicWrite(gatt, characteristic, status);
         }
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+            tvLogger.warn("4");
             super.onCharacteristicChanged(gatt, characteristic);
         }
 
         @Override
         public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+            tvLogger.warn("5");
             super.onDescriptorRead(gatt, descriptor, status);
         }
 
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+            tvLogger.warn("6");
             super.onDescriptorWrite(gatt, descriptor, status);
         }
 
         @Override
         public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
+            tvLogger.warn("7");
             super.onReliableWriteCompleted(gatt, status);
         }
 
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+            tvLogger.warn("8");
             super.onReadRemoteRssi(gatt, rssi, status);
         }
 
         @Override
         public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
+            tvLogger.warn("?");
             super.onMtuChanged(gatt, mtu, status);
         }
     };
